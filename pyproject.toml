@@ -6,15 +6,15 @@ build-backend = "hatchling.build"
 packages = ["src/edge_mining_framework"]
 
 [project]
-name = "llm-gate-strategy"
+name = "verdict-edge"
 version = "0.1.0"
-description = "Prediction Market Alpha Engine"
+description = "Edge Mining Framework — Prediction Market Alpha Engine"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [{name = "Nicholas Carter"}]
 dependencies = ["numpy>=1.24"]
-keywords = ["prediction-markets", "alpha", "signal-evaluation", "expected-value"]
+keywords = ["prediction-markets", "alpha", "signal-evaluation", "expected-value", "verdict"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -28,13 +28,21 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-asyncio>=0.24", "pytest-cov>=4.1", "ruff>=0.8", "mypy>=1.13", "pyyaml>=6.0.1", "code-review-graph>=2.3.7"]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=4.1",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pyyaml>=6.0.1",
+    "code-review-graph>=2.3.7",
+]
 release = ["build>=1.2", "twine>=5.0"]
 
 [project.urls]
-Homepage = "https://github.com/mrnicholasbcarter-code/edge-mining-framework"
-Repository = "https://github.com/mrnicholasbcarter-code/edge-mining-framework"
-Issues = "https://github.com/mrnicholasbcarter-code/edge-mining-framework/issues"
+Homepage = "https://github.com/verdict/verdict-edge"
+Repository = "https://github.com/verdict/verdict-edge"
+Issues = "https://github.com/verdict/verdict-edge/issues"
 
 [tool.ruff]
 line-length = 100
@@ -54,17 +62,14 @@ line-ending = "lf"
 convention = "google"
 
 [tool.mypy]
-# The lint job runs on Python 3.12, which is required to parse current NumPy
-# stubs. Runtime support remains >=3.10 as declared in the project metadata.
 python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+mypy_path = "typings"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-asyncio_mode = "auto"
-markers = [
-    "integration: deterministic cross-package integration checks",
-    "live: opt-in network checks that are not release dependencies",
-]
+[tool.hatch.build.targets.sdist]
+exclude = ["/.hypothesis", "/tests", "/typings", "/.github", "/.pytest_cache", "/.ruff_cache", "/.mypy_cache", "/.coverage"]
