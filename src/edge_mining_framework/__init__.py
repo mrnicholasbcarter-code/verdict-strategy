@@ -37,6 +37,7 @@ Supported Operators (O(1) via operator module):
 
 from edge_mining_framework.evaluator import FeatureEvaluator
 from edge_mining_framework.gate import ExpectedValueGate
+from edge_mining_framework.provider_receipts import build_strategy_receipt
 
 __version__ = "0.1.0"
 __author__ = "edge-mining-framework contributors"
