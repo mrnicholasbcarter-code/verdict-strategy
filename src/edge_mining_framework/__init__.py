@@ -41,4 +41,4 @@ from edge_mining_framework.provider_receipts import build_strategy_receipt
 
 __version__ = "0.1.0"
 __author__ = "edge-mining-framework contributors"
-__all__ = ["ExpectedValueGate", "FeatureEvaluator"]
+__all__ = ["ExpectedValueGate", "FeatureEvaluator", "build_strategy_receipt"]
