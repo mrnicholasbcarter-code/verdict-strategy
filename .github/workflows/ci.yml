@@ -124,9 +124,8 @@ jobs:
       - name: Install verdict-core (pinned)
         run: |
           python -m pip install --upgrade pip
-          # TEMPORARY pin: unmerged verdict-core PR #290 (branch feat/con-001-compat-gate, commit 7291941).
-          # Move to @main/release once verdict-core PR #290 merges.
-          pip install "git+https://github.com/mrnicholasbcarter-code/verdict-core.git@7291941"
+          # Core PR #290 merged - pin to main branch
+          pip install "git+https://github.com/mrnicholasbcarter-code/verdict-core.git@main"
 
       - name: Run compat check
         run: |
