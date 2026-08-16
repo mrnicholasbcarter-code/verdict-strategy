@@ -108,6 +108,30 @@ jobs:
           path: dist/
           retention-days: 7
 
+  compat-gate:
+    name: Compat Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install verdict-core (pinned)
+        run: |
+          python -m pip install --upgrade pip
+          # TEMPORARY pin: unmerged verdict-core PR #290 (branch feat/con-001-compat-gate, commit 7291941).
+          # Move to @main/release once verdict-core PR #290 merges.
+          pip install "git+https://github.com/mrnicholasbcarter-code/verdict-core.git@7291941"
+
+      - name: Run compat check
+        run: |
+          verdict compat check --declared .verdict/compat-manifest.json --json
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest
