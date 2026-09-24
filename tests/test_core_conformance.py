@@ -1,10 +1,20 @@
-"""Boundary conformance against verdict-core's provider receipt contract (ADR-021)."""
+"""Boundary conformance against verdict-core's provider receipt contract (ADR-021).
+
+Runs only when ``verdict`` (verdict-core) is installed. CI installs a pinned
+verdict-core revision in the test job, so drift fails there; a plain
+``uv sync --extra dev`` checkout skips this module instead of failing collection.
+"""
 
 from __future__ import annotations
 
-import verdict.provider_receipts as verdict_receipts
+import pytest
 
-from edge_mining_framework.provider_receipts import build_strategy_receipt, canonical_hash
+verdict_receipts = pytest.importorskip("verdict.provider_receipts")
+
+from edge_mining_framework.provider_receipts import (  # noqa: E402
+    build_strategy_receipt,
+    canonical_hash,
+)
 
 
 def _receipt() -> dict[str, object]:
