@@ -61,6 +61,10 @@ line-ending = "lf"
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: tests that exercise a sibling Verdict package boundary"]
+
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true
