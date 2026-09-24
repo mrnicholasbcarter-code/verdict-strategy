@@ -100,9 +100,9 @@ execution:
 
 ## Links
 
-- **Verdict Core**: https://github.com/verdict/verdict-core
-- **Verdict Risk**: https://github.com/verdict/verdict-risk
-- **Verdict Backtest**: https://github.com/verdict/verdict-backtest
+- **Verdict Core**: https://github.com/mrnicholasbcarter-code/verdict-core
+- **Verdict Risk**: https://github.com/mrnicholasbcarter-code/verdict-risk
+- **Verdict Backtest**: https://github.com/mrnicholasbcarter-code/verdict-backtest
 - **RuVector**: https://github.com/ruvnet/ruvector
 - **Ruflo**: https://github.com/ruvnet/claude-flow
 
