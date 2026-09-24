@@ -40,9 +40,9 @@ dev = [
 release = ["build>=1.2", "twine>=5.0"]
 
 [project.urls]
-Homepage = "https://github.com/verdict/verdict-edge"
-Repository = "https://github.com/verdict/verdict-edge"
-Issues = "https://github.com/verdict/verdict-edge/issues"
+Homepage = "https://github.com/mrnicholasbcarter-code/verdict-strategy"
+Repository = "https://github.com/mrnicholasbcarter-code/verdict-strategy"
+Issues = "https://github.com/mrnicholasbcarter-code/verdict-strategy/issues"
 
 [tool.ruff]
 line-length = 100
