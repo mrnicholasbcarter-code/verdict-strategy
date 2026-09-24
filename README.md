@@ -73,9 +73,9 @@ if FeatureEvaluator.evaluate_compound(features, rules):
 
 ## Links
 
-- **Verdict Core**: https://github.com/verdict/verdict-core
-- **Verdict Risk**: https://github.com/verdict/verdict-risk
-- **Verdict Backtest**: https://github.com/verdict/verdict-backtest
+- **Verdict Core**: https://github.com/mrnicholasbcarter-code/verdict-core
+- **Verdict Risk**: https://github.com/mrnicholasbcarter-code/verdict-risk
+- **Verdict Backtest**: https://github.com/mrnicholasbcarter-code/verdict-backtest
 
 ---
 
