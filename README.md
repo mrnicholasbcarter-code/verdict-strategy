@@ -1,100 +1,73 @@
 # Verdict Edge — Edge Mining Framework
 
-> Lightweight, low-latency mathematical engine for prediction market alpha pipelines. Enables algorithmic traders and quant researchers to decouple data ingestion from execution logic, running live features against compound logical filters evaluating profitability under friction constraints. The framework strictly gates deployment to maximize Expected Value (EV).
+> A small library for prediction-market signals. It evaluates compound feature rules, then approves a trade only if the expected value remains positive after exchange fees. It also reports a Kelly-sized position. The package is `verdict-edge`; the import is `edge_mining_framework`.
 
 ---
 
-## Architecture & Execution Flow
+## What ships today
+
+A small, dependency-light library (`numpy` only) with two stages and a receipt helper:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           VERDICT EDGE                                       │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌────────────┐ │
-│  │  Ingestion   │───▶│  Feature     │───▶│  Filter      │───▶│  Execution │ │
-│  │  (Feeds)     │    │  Engineering │    │  Pipeline    │    │  Gateway   │ │
-│  └──────────────┘    └──────────────┘    └──────────────┘    └────────────┘ │
-│                            │                    │                            │
-│                            ▼                    ▼                            │
-│                     ┌──────────────┐    ┌──────────────┐                    │
-│                     │  Validators  │    │  Risk Gates  │                    │
-│                     │  (Schema,    │    │  (verdict-   │                    │
-│                     │   Bounds)    │    │   risk)      │                    │
-│                     └──────────────┘    └──────────────┘                    │
-└─────────────────────────────────────────────────────────────────────────────┘
+features (dict) ──▶ FeatureEvaluator.evaluate_compound(rules) ──▶ ExpectedValueGate ──▶ trade / no trade
+                                                                        │
+                                                   build_strategy_receipt (Verdict provider receipt)
 ```
 
-### Core Principles
+| Component | What it does | Source |
+|-----------|--------------|--------|
+| `FeatureEvaluator` | AND-only compound rules with fail-fast short-circuit. Scalar operators `== != > < >= <= in_range in_set`; series operators `crosses_above crosses_below zscore rolling_corr rank`. No `eval()`. | `src/edge_mining_framework/evaluator.py` |
+| `ExpectedValueGate` | Fee-aware expected value per contract, Kelly fraction, and recommended size for binary prediction-market contracts. | `src/edge_mining_framework/gate.py` |
+| `build_strategy_receipt` / `canonical_hash` | Builds a Verdict provider receipt (ADR-021 shape). Conformance against `verdict-core` is tested in `tests/test_core_conformance.py`. | `src/edge_mining_framework/provider_receipts.py` |
 
-1. **Separation of concerns** — Ingestion, feature engineering, filtering, execution are independent stages
-2. **Deterministic evaluation** — Same inputs → same outputs, always
-3. **Friction-aware** — Every filter accounts for fees, spread, slippage
-4. **Composable** — Pluggable validators, filters, risk gates, fee models
+The evaluator is data-source agnostic. It does not ingest market feeds, place orders, or
+call exchange APIs; those belong to the caller. Risk limits live in
+[`verdict-risk`](https://github.com/mrnicholasbcarter-code/verdict-risk), and Monte Carlo
+validation lives in [`verdict-backtest`](https://github.com/mrnicholasbcarter-code/verdict-backtest).
 
----
+### Principles
 
-## Features
-
-| Feature | Description |
-|---------|-------------|
-| **Feature Pipeline** | Composable transforms: rolling stats, regime detection, microstructure |
-| **Filter Pipeline** | Logical AND/OR/NOT chains with short-circuit evaluation |
-| **Fee Models** | Kalshi bounded-profit, Polymarket maker-taker, custom |
-| **Risk Integration** | Native `verdict-risk` gate evaluation |
-| **Backtest Native** | Direct `verdict-backtest` tearsheet generation |
-| **Telemetry** | OpenTelemetry spans for every stage |
+1. **Deterministic**: the same inputs give the same outputs.
+2. **Friction-aware**: the EV gate subtracts the exchange fee before it approves a trade.
+3. **Agnostic**: rules evaluate plain dictionaries. There are no exchange SDK imports.
 
 ---
 
-## Quick Start
+## Quick start
+
+The package is not published to PyPI. Install from source:
 
 ```bash
-# Install
-pipx install verdict-edge
-
-# Run edge mining
-verdict-edge mine --config config/alpha_pipeline.yaml --backtest
+git clone https://github.com/mrnicholasbcarter-code/verdict-strategy.git
+cd verdict-strategy
+uv sync --extra dev
+uv run python examples/gate_kalshi.py      # EV gate rejects / accepts two trades
+uv run python examples/run_evaluator.py    # rules from examples/rules.yaml through both stages
+uv run pytest -q
 ```
 
-## Configuration
+```python
+from edge_mining_framework import ExpectedValueGate, FeatureEvaluator
 
-```yaml
-# config/alpha_pipeline.yaml
-ingestion:
-  sources:
-    - type: "polymarket"
-      markets: ["BTC-USD", "ETH-USD"]
-      ws_url: "wss://clob.polymarket.com"
+features = {"rsi": 28.0, "vol_expansion": True}
+rules = [
+    {"feature": "rsi", "operator": "<", "threshold": 30},
+    {"feature": "vol_expansion", "operator": "==", "threshold": True},
+]
 
-features:
-  - name: "spread_bps"
-    transform: "bid_ask_spread_bps"
-  - name: "volume_imbalance"
-    transform: "orderbook_volume_imbalance"
-    window: 100
-
-filters:
-  - name: "min_edge_bps"
-    type: "threshold"
-    field: "expected_edge_bps"
-    operator: ">="
-    value: 15
-  - name: "liquidity_floor"
-    type: "threshold"
-    field: "bid_depth_usd"
-    operator: ">="
-    value: 50000
-
-risk:
-  verdict_risk_config: "~/.verdict/risk_config.yaml"
-  max_position_usd: 10000
-  max_drawdown_pct: 0.05
-
-execution:
-  gateway: "verdict_core"
-  retry_policy: "exponential"
-  timeout_ms: 500
+if FeatureEvaluator.evaluate_compound(features, rules):
+    metrics = ExpectedValueGate.calculate_ev_metrics(
+        predicted_win_prob=0.57,
+        current_contract_price_cents=48,
+        payout_cents=100,
+        exchange_fee_pct=0.04,
+        bankroll=500.0,
+    )
+    print(metrics.profitable, round(metrics.expected_value, 2), round(metrics.kelly_fraction, 4))
 ```
+
+`examples/rules.yaml` shows the rule format, including series operators.
+`examples/backtest_adapter.py` shows the optional hand-off to an installed `verdict-backtest`.
 
 ---
 
@@ -103,8 +76,6 @@ execution:
 - **Verdict Core**: https://github.com/verdict/verdict-core
 - **Verdict Risk**: https://github.com/verdict/verdict-risk
 - **Verdict Backtest**: https://github.com/verdict/verdict-backtest
-- **RuVector**: https://github.com/ruvnet/ruvector
-- **Ruflo**: https://github.com/ruvnet/claude-flow
 
 ---
 
