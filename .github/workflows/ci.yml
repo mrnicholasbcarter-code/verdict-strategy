@@ -9,6 +9,12 @@ on:
     # Run weekly on Mondays at 6 AM UTC
     - cron: '0 6 * * 1'
 
+env:
+  # One verdict-core pin for the test job and the compat gate. The compat gate
+  # must check the core version this repo actually runs against (ADR-024), so
+  # bump this SHA and refresh .verdict/compat-manifest.json together.
+  VERDICT_CORE_REF: 55880def0e778e614f9d7e34c79a98d36eed5b15
+
 jobs:
   test:
     name: Test (Python ${{ matrix.python-version }})
@@ -31,7 +37,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-          pip install "git+https://github.com/mrnicholasbcarter-code/verdict-core.git@55880def0e778e614f9d7e34c79a98d36eed5b15"
+          pip install "git+https://github.com/mrnicholasbcarter-code/verdict-core.git@${VERDICT_CORE_REF}"
 
       - name: Run tests with coverage
         run: |
@@ -125,8 +131,7 @@ jobs:
       - name: Install verdict-core (pinned)
         run: |
           python -m pip install --upgrade pip
-          # Core PR #290 merged - pin to main branch
-          pip install "git+https://github.com/mrnicholasbcarter-code/verdict-core.git@main"
+          pip install "git+https://github.com/mrnicholasbcarter-code/verdict-core.git@${VERDICT_CORE_REF}"
 
       - name: Run compat check
         run: |
